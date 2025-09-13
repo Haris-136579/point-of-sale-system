@@ -23,9 +23,10 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
 
-      # 👇 Compile Java files into "out" folder
       - name: Compile Java sources
-        run: javac -cp ".;lib/*" -d out $(Get-ChildItem -Recurse -Include *.java src)
+        run: |
+          mkdir out
+          javac -cp ".;*.jar" -d out $(Get-ChildItem -Recurse -Include *.java src)
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
