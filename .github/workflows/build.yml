@@ -23,10 +23,19 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
 
+      - name: Prepare dependencies
+        run: |
+          mkdir lib
+          curl -L https://download2.gluonhq.com/openjfx/8u202/openjfx-8u202-windows-x64.zip -o javafx.zip
+          tar -xf javafx.zip
+          cp -r javafx-sdk*/jre/lib/ext/* lib/ || true
+
+          curl -L https://repo1.maven.org/maven2/com/jfoenix/jfoenix/8.0.10/jfoenix-8.0.10.jar -o lib/jfoenix-8.0.10.jar
+
       - name: Compile Java sources
         run: |
           mkdir out
-          javac -cp ".;*.jar" -d out $(Get-ChildItem -Recurse -Include *.java src)
+          javac -cp ".;lib/*" -d out $(Get-ChildItem -Recurse -Include *.java src)
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
