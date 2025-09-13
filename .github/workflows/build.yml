@@ -24,15 +24,18 @@ jobs:
           java-version: '8'
 
       - name: Prepare dependencies
+        shell: pwsh
         run: |
           mkdir lib
 
           # Download and extract JavaFX
           curl -L -o javafx.zip https://download2.gluonhq.com/openjfx/8u202/openjfx-8u202-windows-x64.zip
           Expand-Archive -Path javafx.zip -DestinationPath .
-          $sdk = Get-ChildItem -Directory | Where-Object { $_.Name -like "javafx-sdk*" } | Select-Object -First 1
-          Move-Item $sdk.FullName javafx-sdk
-          Copy-Item "javafx-sdk\jre\lib\ext\*" lib\ -Force -ErrorAction SilentlyContinue
+          $sdk = Get-ChildItem -Directory -Filter "javafx-sdk*" | Select-Object -First 1
+          if ($sdk) {
+            Rename-Item -Path $sdk.FullName -NewName "javafx-sdk"
+            Copy-Item "javafx-sdk\jre\lib\ext\*" lib\ -Force -ErrorAction SilentlyContinue
+          }
 
           # Download JFoenix
           curl -L https://repo1.maven.org/maven2/com/jfoenix/jfoenix/8.0.10/jfoenix-8.0.10.jar -o lib/jfoenix-8.0.10.jar
@@ -41,6 +44,7 @@ jobs:
           Get-ChildItem -Path . -Recurse -Include *.jar | ForEach-Object { Copy-Item $_.FullName lib\ -Force }
 
       - name: Compile Java sources
+        shell: pwsh
         run: |
           mkdir out
           $files = Get-ChildItem -Recurse -Include *.java src | ForEach-Object { $_.FullName }
