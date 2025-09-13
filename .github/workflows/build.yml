@@ -26,17 +26,25 @@ jobs:
       - name: Prepare dependencies
         run: |
           mkdir lib
+
+          # Download and extract JavaFX
           curl -L -o javafx.zip https://download2.gluonhq.com/openjfx/8u202/openjfx-8u202-windows-x64.zip
           Expand-Archive -Path javafx.zip -DestinationPath .
-          Rename-Item (Get-ChildItem -Directory | Where-Object { $_.Name -like "javafx-sdk*" }).FullName javafx-sdk
-          cp -r javafx-sdk/jre/lib/ext/* lib/ || true
+          $sdk = Get-ChildItem -Directory | Where-Object { $_.Name -like "javafx-sdk*" } | Select-Object -First 1
+          Move-Item $sdk.FullName javafx-sdk
+          Copy-Item "javafx-sdk\jre\lib\ext\*" lib\ -Force -ErrorAction SilentlyContinue
 
+          # Download JFoenix
           curl -L https://repo1.maven.org/maven2/com/jfoenix/jfoenix/8.0.10/jfoenix-8.0.10.jar -o lib/jfoenix-8.0.10.jar
+
+          # Copy all existing JARs from repo into lib
+          Get-ChildItem -Path . -Recurse -Include *.jar | ForEach-Object { Copy-Item $_.FullName lib\ -Force }
 
       - name: Compile Java sources
         run: |
           mkdir out
-          javac -cp ".;lib/*" -d out $(Get-ChildItem -Recurse -Include *.java src)
+          $files = Get-ChildItem -Recurse -Include *.java src | ForEach-Object { $_.FullName }
+          javac -cp ".;lib/*" -d out $files
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
