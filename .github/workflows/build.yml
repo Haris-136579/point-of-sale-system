@@ -23,19 +23,14 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
 
-      - name: Download JavaFX 8 SDK (Windows)
-        run: |
-          curl -L -o javafx.zip https://download2.gluonhq.com/openjfx/8u202/openjfx-8u202-windows-x64.zip
-          tar -xf javafx.zip
-          mv javafx-sdk-* javafx-sdk
-
       - name: Prepare dependencies
         run: |
           mkdir lib
-          # Put all JavaFX jars into lib
-          cp javafx-sdk/rt/lib/ext/*.jar lib/ || true
-          cp javafx-sdk/rt/lib/jfxrt.jar lib/ || true
-          # Add JFoenix
+          curl -L -o javafx.zip https://download2.gluonhq.com/openjfx/8u202/openjfx-8u202-windows-x64.zip
+          Expand-Archive -Path javafx.zip -DestinationPath .
+          Rename-Item (Get-ChildItem -Directory | Where-Object { $_.Name -like "javafx-sdk*" }).FullName javafx-sdk
+          cp -r javafx-sdk/jre/lib/ext/* lib/ || true
+
           curl -L https://repo1.maven.org/maven2/com/jfoenix/jfoenix/8.0.10/jfoenix-8.0.10.jar -o lib/jfoenix-8.0.10.jar
 
       - name: Compile Java sources
