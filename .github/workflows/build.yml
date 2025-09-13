@@ -1,5 +1,3 @@
-name: Build and SonarCloud Analysis
-
 on:
   push:
     branches: [ master, main ]
@@ -29,19 +27,14 @@ jobs:
           mkdir lib
 
           # Download and extract JavaFX
-          curl -L -o javafx.zip https://download2.gluonhq.com/openjfx/8u202/openjfx-8u202-windows-x64.zip
+          Invoke-WebRequest -Uri https://download2.gluonhq.com/openjfx/8u202/openjfx-8u202-windows-x64.zip -OutFile javafx.zip
           Expand-Archive -Path javafx.zip -DestinationPath .
-          $sdk = Get-ChildItem -Directory -Filter "javafx-sdk*" | Select-Object -First 1
-          if ($sdk) {
-            Rename-Item -Path $sdk.FullName -NewName "javafx-sdk"
-            Copy-Item "javafx-sdk\jre\lib\ext\*" lib\ -Force -ErrorAction SilentlyContinue
-          }
+          $dir = Get-ChildItem -Directory | Where-Object { $_.Name -like "javafx-sdk*" } | Select-Object -First 1
+          Rename-Item -Path $dir.FullName -NewName "javafx-sdk"
+          Copy-Item -Path "javafx-sdk\jre\lib\ext\*" -Destination "lib" -Recurse -Force -ErrorAction SilentlyContinue
 
           # Download JFoenix
-          curl -L https://repo1.maven.org/maven2/com/jfoenix/jfoenix/8.0.10/jfoenix-8.0.10.jar -o lib/jfoenix-8.0.10.jar
-
-          # Copy all existing JARs from repo into lib
-          Get-ChildItem -Path . -Recurse -Include *.jar | ForEach-Object { Copy-Item $_.FullName lib\ -Force }
+          Invoke-WebRequest -Uri https://repo1.maven.org/maven2/com/jfoenix/jfoenix/8.0.10/jfoenix-8.0.10.jar -OutFile lib/jfoenix-8.0.10.jar
 
       - name: Compile Java sources
         shell: pwsh
